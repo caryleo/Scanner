@@ -6,12 +6,14 @@
 #ifndef SCANNER_SCANNER_H
 #define SCANNER_SCANNER_H
 
+#include <vector>
+#include <string>
 
 class Scanner {
 public:
     Scanner();
-    ~Scanner();
 
+    ~Scanner();
 
 
 private:
@@ -19,7 +21,7 @@ private:
 
 public:
     //单词属性枚举
-    enum e_Attributes{
+    enum e_Attributes {
         //错误的单词
                 A_LEX_ERROR = 0x100,
         //注释，空格
@@ -49,7 +51,7 @@ public:
     };
 
     //程序保留字类别枚举
-    enum e_KeyWordKind{
+    enum e_KeywordKind {
         //关键字，每个关键字一个类
                 K_KEYWORD_ABSTRACT, K_KEYWORD_BOOLEAN, K_KEYWORD_BREAK,
         K_KEYWORD_BYTE, K_KEYWORD_CASE, K_KEYWORD_CATCH, K_KEYWORD_CHAR,
@@ -63,17 +65,16 @@ public:
         K_KEYWORD_PROTECTED, K_KEYWORD_PUBLIC, K_KEYWORD_RETURN, K_KEYWORD_SHORT,
         K_KEYWORD_STATIC, K_KEYWORD_SUPER, K_KEYWORD_SWITCH, K_KEYWORD_SYNCHRONIZED,
         K_KEYWORD_THIS, K_KEYWORD_THROW, K_KEYWORD_THROWS, K_KEYWORD_TRANSIENT,
-        K_KEYWORD_TRUE, K_KEYWORD_TRY, K_KEYWORD_VOID, K_KEYWORD_VOLATILE,
-        K_KEYWORD_WHILE,
+        K_KEYWORD_TRUE, K_KEYWORD_TRY, K_KEYWORD_VOID, K_KEYWORD_VOLATILE, K_KEYWORD_WHILE,
         //常量，每一类常量一个类
                 K_CONSTANT_INTEGER, K_CONSTANT_REAL, K_CONSTANT_BOOL,
         K_CONSTANT_STRING, K_CONSTANT_CHAR,
-        //转移字符，每一个转义符一个类
+        //转义字符，每一个转义符一个类
                 K_ESCAPE_QUA_CHAR, K_ESCAPE_HEX_CHAR, K_ESCAPE_SINGLE_QUO,
         K_ESCAPE_BACK_SLASH, K_ESCAPE_CR, k_ESCAPE_LF, K_ESCAPE_FF,
         k_ESCAPE_TAB, K_ESCAPE_BACKSPACE,
         //界符，一个符号一个类
-                K_BOUNDARY_BRACES_LEFT, K_BOUNDARY_BRACES_RIGHT, K_BOUNDARY_BRACKET_LEFT,
+                K_BOUNDARY_BRACES_LEFT = 100, K_BOUNDARY_BRACES_RIGHT, K_BOUNDARY_BRACKET_LEFT,
         K_BOUNDARY_BRACKET_RIGHT, K_BOUNDARY_PARENTHESES_LEFT, K_BOUNDARY_PARENTHESES_RIGHT,
         K_BOUNDARY_COMMA, K_BOUNDARY_PERIOD, K_BOUNDARY_SEMICOLON,
         //运算符，一个符号一个类(按位与和逻辑与合并，按位或和逻辑或合并，按位异或和逻辑异或合并)
@@ -89,7 +90,36 @@ public:
         K_OPR_TERNARY_QUESTION, K_OPR_TERNARY_COLON
     };
 
-    //
+    //关键词对应的char数组
+    char ca_Keyword[100][13] = {
+            "abstract", "boolean", "break",
+            "byte", "case", "catch", "char",
+            "class", "const", "continue",
+            "default", "do", "double", "else",
+            "extends", "false", "final", "finally",
+            "float", "for", "goto", "if",
+            "implements", "import", "instanceof",
+            "int", "interface", "long", "native",
+            "new", "null", "package", "private",
+            "protected", "public", "return", "short",
+            "static", "super", "switch", "synchronized",
+            "this", "throw", "throws", "transient",
+            "true", "try", "void", "volatile", "while",
+            "{", "}", "[", "]", "(", ")", ",", ".", ";",
+            "=", "+", "-", "*", "/", "%",
+            ">", ">=", "==", "!=", "<", "<=",
+            "&&", "||", "!",
+            "&", "|", "^", "~",
+            "+=", "-=", "*=", "/=", "%=",
+            "++", "--",
+            "&=", "|=", "^=",
+            "<<", ">>", ">>>",
+            "<<=", ">>=", ">>>=",
+            "?", ":"
+    };
+
+    //标识符符号表
+    std::vector<std::string> v_Identity;
 };
 
 
