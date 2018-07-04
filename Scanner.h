@@ -15,6 +15,8 @@
 #include "Constants.h"
 using namespace std;
 
+class Token;
+
 class Scanner {
 public:
     Scanner();
@@ -42,6 +44,11 @@ private:
     int i_ForwardCount;//forward指针，最大为31（0-31）
     bool b_IsRightBufferAvail;//判断右缓冲是否有东西
     int line, col;//当前读出字符的行号和列号
+    bool b_EOFTag;//读文件结束标志
+    bool b_EndTag;//读字符结束标志
+    bool b_TrueEndTag;//分析结束标志
+
+    vector<Token> v_Tokens;
     /**
      * 用于从缓冲区读取一个字符
      */
@@ -62,7 +69,6 @@ private:
      * 回退一个字符
      */
     void _Untread();
-
     /**
      * 词法分析主控
      */

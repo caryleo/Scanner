@@ -18,9 +18,12 @@ void Scanner::Execute() {
         _LoadToLo();
         _LoToHi();
         _LoadToLo();
-        while (!if_InFile.eof()) {
-
+        while (true) {
             _Scan();
+            if (b_TrueEndTag)
+            {
+                break;
+            }
         }
         of_OutFile.close();
         of_ErrFile.close();
@@ -42,13 +45,22 @@ void Scanner::Init(string fileName) {
     str_Buffer.clear();
     str_BufferL.clear();
     str_BufferR.clear();
+    for (int i = 0; i < 64; ++i) {
+        str_Buffer.append("#");
+        str_BufferL.append("#");
+        str_BufferR.append("#");
+    }
     i_ForwardCount = 0;
     b_IsRightBufferAvail = false;
+    b_EOFTag = false;
+    b_EndTag = false;
+    b_TrueEndTag = false;
 }
 
 char Scanner::_ReadChar() {
     char ret;
-    if (i_ForwardCount >= (CON_BUFFER_SIZE / 2 - 1))
+    //cout << "读入一个字符" << endl;
+    if (i_ForwardCount >= (CON_BUFFER_SIZE / 2))
     {
         //读完一个缓冲区，需要加载下一个缓冲区
         if (b_IsRightBufferAvail)
@@ -57,10 +69,19 @@ char Scanner::_ReadChar() {
             _LoToHi();
             _LoToR();
         }
-        else
+        else if (!b_EOFTag)
         {
             _LoToHi();
             _LoadToLo();
+        }
+        else if (!b_EndTag)
+        {
+            _LoToHi();
+            b_EndTag = true;
+        }
+        else
+        {
+            return EOF;
         }
         i_ForwardCount = 0;
     }
@@ -72,6 +93,10 @@ void Scanner::_LoadToLo() {
     char str[CON_BUFFER_SIZE / 2 + 1];
     memset(str, 0, sizeof(str));
     if_InFile.read(str, CON_BUFFER_SIZE / 2);
+    if (if_InFile.eof())
+    {
+        b_EOFTag = true;
+    }
     for (int i = CON_BUFFER_SIZE / 2; i < CON_BUFFER_SIZE; ++i)
     {
         str_Buffer.at(i) = str[i - CON_BUFFER_SIZE / 2];
@@ -108,5 +133,11 @@ void Scanner::_Untread() {
 }
 
 void Scanner::_Scan() {
-
+    char ch = _ReadChar();
+    if (ch == EOF || (ch == 0 && b_EndTag))
+    {
+        b_TrueEndTag = true;
+        return;
+    }
+    cout << ch;
 }
