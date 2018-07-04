@@ -8,7 +8,15 @@
 
 
 class Position {
-
+public:
+    int i_Line;
+    int i_Col;
+    /**
+     * 设置位置
+     * @param x 行号
+     * @param y 列号
+     */
+    void Set(int x, int y);
 };
 
 

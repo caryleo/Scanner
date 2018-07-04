@@ -5,6 +5,8 @@
 #ifndef SCANNER_CONSTANTS_H
 #define SCANNER_CONSTANTS_H
 
+#include <string>
+
 //单词属性枚举
 enum e_Attributes {
     //错误的单词
@@ -85,5 +87,7 @@ extern const int CON_MAX_FILE;
 extern const int CON_TABLE_LENGTH;
 extern const int CON_PRIORITY_LENGTH;
 extern const int CON_OPR_TABLE_OFFSET;
+extern const int CON_BUFFER_SIZE;
+extern const std::string CON_FILE_PATH_PREFIX;
 
 #endif //SCANNER_CONSTANTS_H

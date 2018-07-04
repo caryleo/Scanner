@@ -3,8 +3,11 @@
 #include "Scanner.h"
 
 int main() {
+    cout << "请输入要进行分析的文件: ";
+    string fileName;
+    cin >> fileName;
     Scanner scanner;
-    scanner.Init("test2");
+    scanner.Init(fileName);
     scanner.Execute();
     return 0;
 }

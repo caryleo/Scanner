@@ -39,3 +39,5 @@ const int CON_MAX_FILE = 65536;
 const int CON_TABLE_LENGTH = K_TABLE_END;
 const int CON_PRIORITY_LENGTH = 14;
 const int CON_OPR_TABLE_OFFSET = 50;
+const int CON_BUFFER_SIZE = 64;
+const std::string CON_FILE_PATH_PREFIX = "..\\Data\\";

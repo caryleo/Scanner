@@ -3,3 +3,8 @@
 //
 
 #include "Position.h"
+
+void Position::Set(int x, int y) {
+    i_Line = x;
+    i_Col = y;
+}

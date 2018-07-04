@@ -38,15 +38,35 @@ private:
     string str_ErrFileName;//错误文件名
     string str_InFilePathName;//输入文件路径
 
-    string str_buffer, str_bufferL, str_bufferR;//缓冲区，分别可存64，32和32个字符，后两者覆盖前面的缓冲区的左右两部分
-    /**
-     * 进行读文件处理和写文件处理
-     */
-    void _FileProcess();
+    string str_Buffer, str_BufferL, str_BufferR;//缓冲区，分别可存64，32和32个字符，后两者覆盖前面的缓冲区的左右两部分
+    int i_ForwardCount;//forward指针，最大为31（0-31）
+    bool b_IsRightBufferAvail;//判断右缓冲是否有东西
+    int line, col;//当前读出字符的行号和列号
     /**
      * 用于从缓冲区读取一个字符
      */
     char _ReadChar();
+    /**
+     * 用于将文件内容读入第二缓冲区
+     */
+    void _LoadToLo();
+    /**
+     * 用于将第二缓冲区内容转入第一缓冲区（第一缓冲区内容转入L）
+     */
+    void _LoToHi();
+    /**
+     * 用于将第二缓冲区转移到R缓冲区
+     */
+    void _LoToR();
+    /**
+     * 回退一个字符
+     */
+    void _Untread();
+
+    /**
+     * 词法分析主控
+     */
+    void _Scan();
 };
 
 
