@@ -1,9 +1,10 @@
 #include <iostream>
+#include "Constants.h"
 #include "Scanner.h"
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
     Scanner scanner;
-    std::cout << scanner.K_BOUNDARY_BRACES_RIGHT << std::endl;
+    scanner.Init("test2");
+    scanner.Execute();
     return 0;
 }

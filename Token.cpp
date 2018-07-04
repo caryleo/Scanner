@@ -3,3 +3,7 @@
 //
 
 #include "Token.h"
+
+void Token::Check(e_KeywordKind e) {
+    cout << e << endl;
+}

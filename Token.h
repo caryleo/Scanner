@@ -5,10 +5,13 @@
 
 #ifndef SCANNER_TOKEN_H
 #define SCANNER_TOKEN_H
-
+#include "Scanner.h"
+#include "Constants.h"
 
 class Token {
 
+public:
+    void Check(e_KeywordKind e);
 };
 
 
