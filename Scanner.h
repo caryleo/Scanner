@@ -90,6 +90,25 @@ private:
      * @return 保留字数组的下标，-1则不存在
      */
     int _IsKeyword(string str);
+    /**
+     * 数字常量分析
+     * @return true是分析正确，false是分析错误
+     */
+    bool _ScanNumber();
+    /**
+     * 用于进行文件输出
+     */
+    void _FileOutput();
+    /**
+     * 词法分析报错
+     * @param errorCode 错误码
+     * @param tok 错误的token
+     */
+    void _LexError(int errorCode, Token tok);
+    /**
+     * 扫描字符
+     */
+    void _ScanCharacter();
 };
 
 

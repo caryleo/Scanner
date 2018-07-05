@@ -1,7 +1,5 @@
 package Question2;
 
-import java.util.*;
-
 public class Array {
     String[] week = new String[]{"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
     Integer[] numbers = new Integer[20];

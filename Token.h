@@ -14,11 +14,6 @@ using namespace std;
 
 class Token {
 public:
-    e_Attributes ea_Type;
-    e_KeywordKind ek_kind;
-    string str_RealString;
-    Position pos_StartPos;
-    Position pos_EndPos;
     /**
      * 设置属性字属性
      * @param ea type类型
@@ -53,6 +48,13 @@ public:
     const Position &getPos_EndPos() const;
 
     void setPos_EndPos(const Position &pos_EndPos);
+
+private:
+    e_Attributes ea_Type;
+    e_KeywordKind ek_kind;
+    string str_RealString;
+    Position pos_StartPos;
+    Position pos_EndPos;
 };
 
 

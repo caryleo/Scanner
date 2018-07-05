@@ -9,8 +9,6 @@
 
 class Position {
 public:
-    int i_Line;
-    int i_Col;
     /**
      * 设置位置
      * @param x 行号
@@ -30,6 +28,10 @@ public:
     void setI_Col(int i_Col);
 
     ~Position();
+
+private:
+    int i_Line;
+    int i_Col;
 };
 
 
