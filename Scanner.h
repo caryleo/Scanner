@@ -109,6 +109,30 @@ private:
      * 扫描字符
      */
     void _ScanCharacter();
+    /**
+     * 扫描空格
+     */
+    void _ScanSpace();
+    /**
+     * 对于已经无效的字符，进行后续内容的补全
+     * @param errorCode 需要传入的错误码
+     * @param tmpStr 没有补全的内容
+     * @param stPos 开始位置
+     * @param ch 当前字符
+     */
+    void _FillUselessCharacter(int errorCode, string tmpStr, Position stPos, char ch);
+    /**
+     * 扫描字符串
+     */
+    void _ScanString();
+    /**
+     * 扫描加号逻辑
+     */
+    void _ScanAdd();
+    /**
+     * 扫描减号逻辑
+     */
+    void _ScanSub();
 };
 
 
