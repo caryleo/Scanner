@@ -17,6 +17,19 @@ public:
      * @param y 列号
      */
     void Set(int x, int y);
+    Position(int x, int y);
+
+    Position();
+
+    int getI_Line() const;
+
+    void setI_Line(int i_Line);
+
+    int getI_Col() const;
+
+    void setI_Col(int i_Col);
+
+    ~Position();
 };
 
 

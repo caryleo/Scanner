@@ -27,6 +27,32 @@ public:
      * @param stp 词素的位置
      */
     void Set(e_Attributes ea, e_KeywordKind ek, string str, Position stp, Position edp);
+
+    Token(e_Attributes ea, e_KeywordKind ek, string str, Position stp, Position edp);
+
+    Token();
+
+    ~Token();
+
+    e_Attributes getEa_Type() const;
+
+    void setEa_Type(e_Attributes ea_Type);
+
+    e_KeywordKind getEk_kind() const;
+
+    void setEk_kind(e_KeywordKind ek_kind);
+
+    const string &getStr_RealString() const;
+
+    void setStr_RealString(const string &str_RealString);
+
+    const Position &getPos_StartPos() const;
+
+    void setPos_StartPos(const Position &pos_StartPos);
+
+    const Position &getPos_EndPos() const;
+
+    void setPos_EndPos(const Position &pos_EndPos);
 };
 
 

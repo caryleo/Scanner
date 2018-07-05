@@ -43,10 +43,11 @@ private:
     string str_Buffer, str_BufferL, str_BufferR;//缓冲区，分别可存64，32和32个字符，后两者覆盖前面的缓冲区的左右两部分
     int i_ForwardCount;//forward指针，最大为31（0-31）
     bool b_IsRightBufferAvail;//判断右缓冲是否有东西
-    int line, col;//当前读出字符的行号和列号
+    int i_Line, i_Col;//当前读出字符的行号和列号
     bool b_EOFTag;//读文件结束标志
     bool b_EndTag;//读字符结束标志
     bool b_TrueEndTag;//分析结束标志
+    char c_CurChar;//当前读出字符
 
     vector<Token> v_Tokens;
     /**
@@ -73,6 +74,22 @@ private:
      * 词法分析主控
      */
     void _Scan();
+    /**
+     * 标识符，关键字，布尔常量分析
+     */
+    void _ScanIdentityOrKeywordOrBoolean();
+    /**
+     * 判断当前字段是否为布尔常量
+     * @param str 欲检测的字段
+     * @return 0则不是布尔常量，1则为true，2则为false
+     */
+    int _IsBoolean(string str);
+    /**
+     * 判断当前字段是否为关键字
+     * @param str 欲检测的字段
+     * @return 保留字数组的下标，-1则不存在
+     */
+    int _IsKeyword(string str);
 };
 
 
