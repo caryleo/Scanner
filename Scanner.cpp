@@ -362,9 +362,125 @@ void Scanner::_FileOutput() {
     int len = v_Tokens.size();
     for (int i = 0; i < len; ++i) {
         Token tmp = v_Tokens.at(i);
-        cout << " (" << tmp.getPos_StartPos().getI_Line() << ", "
-             << tmp.getPos_StartPos().getI_Col() << ")\t(" << tmp.getPos_EndPos().getI_Line() << ", "
-             << tmp.getPos_EndPos().getI_Col() << ")\t" << tmp.getStr_RealString() << endl;
+        //起点行列号
+        cout << "<" << tmp.getPos_StartPos().getI_Line() << "," << tmp.getPos_StartPos().getI_Col() << ">"
+             << "\t";
+        cout << "<" << tmp.getPos_EndPos().getI_Line() << "," << tmp.getPos_EndPos().getI_Col()<< ">"
+             << "\t";
+        //type
+        e_Attributes type = tmp.getEa_Type();
+        switch (type) {
+            case A_LEX_ERROR:
+                cout << hex << A_LEX_ERROR << "\t";
+                cout << dec << "[error]" << "\t";
+                break;
+            case A_LEX_COMMENT:
+                cout << hex << A_LEX_COMMENT << "\t";
+                cout << dec << "[comment]" << "\t";
+                break;
+            case A_LEX_SPACE:
+                cout << hex << A_LEX_SPACE << "\t";
+                cout << dec << "[space]" << "\t";
+                break;
+            case A_LEX_KEYWORD:
+                cout << hex << A_LEX_KEYWORD << "\t";
+                cout << dec << "[keyword]" << "\t";
+                break;
+            case A_LEX_IDENTITY:
+                cout << hex << A_LEX_IDENTITY << "\t";
+                cout << dec << "[identity]" << "\t";
+                break;
+            case A_LEX_BOOL:
+                cout << hex << A_LEX_BOOL << "\t";
+                cout << dec << "[bool]" << "\t";
+                break;
+            case A_LEX_CHAR:
+                cout << hex << A_LEX_CHAR << "\t";
+                cout << dec << "[char]" << "\t";
+                break;
+            case A_LEX_INT:
+                cout << hex << A_LEX_INT << "\t";
+                cout << dec << "[int]" << "\t";
+                break;
+            case A_LEX_REAL:
+                cout << hex << A_LEX_REAL << "\t";
+                cout << dec << "[real]" << "\t";
+                break;
+            case A_LEX_STRING:
+                cout << hex << A_LEX_STRING << "\t";
+                cout << dec << "[string]" << "\t";
+                break;
+            case A_LEX_ASSIGN:
+                cout << hex << A_LEX_ASSIGN << "\t";
+                cout << dec << "[assign]" << "\t";
+                break;
+            case A_LEX_TERNARY:
+                cout << hex << A_LEX_TERNARY << "\t";
+                cout << dec << "[ternary]" << "\t";
+                break;
+            case A_LEX_OR:
+                cout << hex << A_LEX_OR << "\t";
+                cout << dec << "[or]" << "\t";
+                break;
+            case A_LEX_AND:
+                cout << hex << A_LEX_AND << "\t";
+                cout << dec << "[and]" << "\t";
+                break;
+            case A_LEX_OR_BIT:
+                cout << hex << A_LEX_OR_BIT << "\t";
+                cout << dec << "[or bit]" << "\t";
+                break;
+            case A_LEX_XOR_BIT:
+                cout << hex << A_LEX_XOR_BIT << "\t";
+                cout << dec << "[xor bit]" << "\t";
+                break;
+            case A_LEX_AND_BIT:
+                cout << hex << A_LEX_AND_BIT << "\t";
+                cout << dec << "[and bit]" << "\t";
+                break;
+            case A_LEX_EQUAL:
+                cout << hex << A_LEX_EQUAL << "\t";
+                cout << dec << "[equal]" << "\t";
+                break;
+            case A_LEX_COMPARE:
+                cout << hex << A_LEX_COMPARE << "\t";
+                cout << dec << "[compare]" << "\t";
+                break;
+            case A_LEX_SHIFT:
+                cout << hex << A_LEX_SHIFT << "\t";
+                cout << dec << "[shift]" << "\t";
+                break;
+            case A_LEX_ADD_SUB:
+                cout << hex << A_LEX_ADD_SUB << "\t";
+                cout << dec << "[add sub]" << "\t";
+                break;
+            case A_LEX_MUL_DIV_MOD:
+                cout << hex << A_LEX_MUL_DIV_MOD << "\t";
+                cout << dec << "[mul div mod]" << "\t";
+                break;
+            case A_LEX_HIGH_PRIORITY:
+                cout << hex << A_LEX_HIGH_PRIORITY << "\t";
+                cout << dec << "[high priority]" << "\t";
+                break;
+            case A_LEX_BOUNDARY:
+                cout << hex << A_LEX_BOUNDARY << "\t";
+                cout << dec << "[boundary]" << "\t";
+                break;
+            case A_LEX_COMMA:
+                cout << hex << A_LEX_COMMA << "\t";
+                cout << dec << "[comma]" << "\t";
+                break;
+            case A_LEX_BRACES:
+                cout << hex << A_LEX_BRACES << "\t";
+                cout << dec << "[braces]" << "\t";
+                break;
+            case A_LEX_SEMICOLON:
+                cout << hex << A_LEX_SEMICOLON << "\t";
+                cout << dec << "[semicolon]" << "\t";
+                break;
+            default:break;
+        }
+        cout << tmp.getStr_RealString() << endl;
     }
 }
 
@@ -1088,6 +1204,9 @@ void Scanner::_LexError(int errorCode, Token tok) {
         case 115:
             cerr << "转义字符格式错误" << endl;
             break;
+        case 116:
+            cerr << "空字符" << endl;
+            break;
         default:
             cerr << "未知错误" << endl;
             break;
@@ -1651,6 +1770,15 @@ void Scanner::_ScanCharacter() {
                 return;
             }
         }
+    }
+    else if (ch == '\'') {
+        //空字符，报错
+        _Untread();
+        Position edPos(i_Line, i_Col);
+        tok.Set(A_LEX_ERROR, K_CONSTANT_CHAR, tmpStr, stPos, edPos);
+        v_Tokens.push_back(tok);
+        _LexError(116, tok);
+        return;
     }
     else {
         //正常的字符，后面跟着一个单引号正常结束，否则报错
@@ -2634,6 +2762,7 @@ void Scanner::_ScanComment(string tmpStr, Position stPos) {
         _Untread();
         Position edPos(i_Line, i_Col);
         tok.Set(A_LEX_COMMENT, K_COMMENT, tmpStr, stPos, edPos);
+        v_Tokens.push_back(tok);
         return;
     }
     while (!(ch == '\n' || ch == '\t' || ch == '\f' || ch == '\r' || ch == '\b')) {
@@ -2645,6 +2774,7 @@ void Scanner::_ScanComment(string tmpStr, Position stPos) {
             _Untread();
             Position edPos(i_Line, i_Col);
             tok.Set(A_LEX_COMMENT, K_COMMENT, tmpStr, stPos, edPos);
+            v_Tokens.push_back(tok);
             return;
         }
     }

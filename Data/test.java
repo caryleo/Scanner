@@ -6,9 +6,6 @@ public class LexTest
     extends Test
 {
     private static String NAME = "An error string...
-    /* Rounding modes:
-     * Only a test
-     */
     for (;i<x.ival;i++) {
         carry+=((long)x.words[i]&0xffffffffL)+y_ext;
         result.words[i]=(int)carry|0xHEX;
