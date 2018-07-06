@@ -37,7 +37,7 @@ public:
 
     void setEk_kind(e_KeywordKind ek_kind);
 
-    const string &getStr_RealString() const;
+    string getStr_RealString();
 
     void setStr_RealString(const string &str_RealString);
 
@@ -45,7 +45,7 @@ public:
 
     void setPos_StartPos(const Position &pos_StartPos);
 
-    const Position &getPos_EndPos() const;
+    Position getPos_EndPos();
 
     void setPos_EndPos(const Position &pos_EndPos);
 

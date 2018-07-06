@@ -127,16 +127,20 @@ private:
     void _ScanString();
     /**
      * 扫描运算符
+     * @return true成功，false失败
      */
-    void _ScanOPR();
+    bool _ScanOPR();
     /**
      * 扫描界符
+     * @return -1错误，0正确，1识别出数字
      */
-    void _ScanBoundary();
+    int _ScanBoundary();
     /**
      * 扫描注释
+     * @param tmpStr 之前的字符串
+     * @param stPos  开始位置
      */
-    void _ScanComment();
+    void _ScanComment(string tmpStr, Position stPos);
 };
 
 

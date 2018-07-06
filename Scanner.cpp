@@ -29,7 +29,7 @@ void Scanner::Execute() {
         _FileOutput();
         of_OutFile.close();
         of_ErrFile.close();
-        cout << endl << "分析完成" << endl;
+        cout << "分析完成" << endl;
     }
     else {
         cerr << "文件读取错误！（文件错误或无此文件）" << endl;
@@ -262,10 +262,18 @@ void Scanner::_Scan() {
             i_Col++;
             _ScanBoundary();
             break;
-        case '\f':
+        case '\f':break;
         case '\b':
+            //回退一个字符
+            _Untread();
+            break;
         case '\r':
-            //TODO:特殊转义符逻辑
+            //回退到行首
+            _Untread();
+            while (i_Col--) {
+                _Untread();
+            }
+            break;
         default:
             break;
     }
@@ -354,9 +362,9 @@ void Scanner::_FileOutput() {
     int len = v_Tokens.size();
     for (int i = 0; i < len; ++i) {
         Token tmp = v_Tokens.at(i);
-        cout << tmp.getStr_RealString() << " (" << tmp.getPos_StartPos().getI_Line() << ", "
-             << tmp.getPos_StartPos().getI_Col() << ") (" << tmp.getPos_EndPos().getI_Line() << ", "
-             << tmp.getPos_EndPos().getI_Col() << ")" << endl;
+        cout << " (" << tmp.getPos_StartPos().getI_Line() << ", "
+             << tmp.getPos_StartPos().getI_Col() << ")\t(" << tmp.getPos_EndPos().getI_Line() << ", "
+             << tmp.getPos_EndPos().getI_Col() << ")\t" << tmp.getStr_RealString() << endl;
     }
 }
 
@@ -1482,7 +1490,7 @@ void Scanner::_ScanCharacter() {
                 //转义符，直接报错
                 _Untread();
                 Position edPos(i_Line, i_Col);
-                tok.Set(A_LEX_ERROR, K_ESCAPE_FF, tmpStr, stPos, edPos);
+                tok.Set(A_LEX_ERROR, K_ESCAPE_TAB, tmpStr, stPos, edPos);
                 v_Tokens.push_back(tok);
                 _LexError(104, tok);
                 return;
@@ -1651,17 +1659,909 @@ void Scanner::_FillUselessCharacter(int errorCode, string tmpStr, Position stPos
 }
 
 void Scanner::_ScanString() {
-    //TODO:扫描字符串
+    //扫描字符串
+    char ch = c_CurChar;
+    Token tok;
+    string tmpStr;
+    tmpStr.clear();
+    tmpStr = ch;
+    Position stPos(i_Line, i_Col);
+    ch = _ReadChar();
+    if (ch == EOF || (ch == 0 && b_EndTag)) {
+        b_TrueEndTag = true;
+        Position edPos(i_Line, i_Col);
+        tok.Set(A_LEX_ERROR, K_CONSTANT_STRING, tmpStr, stPos, edPos);
+        v_Tokens.push_back(tok);
+        _LexError(103, tok);
+        return;
+    }
+    if (ch == '\n' || ch == '\t' || ch == '\f' || ch == '\r' || ch == '\b') {
+        //转义符，直接报错
+        _Untread();
+        Position edPos(i_Line, i_Col);
+        tok.Set(A_LEX_ERROR, K_CONSTANT_STRING, tmpStr, stPos, edPos);
+        v_Tokens.push_back(tok);
+        _LexError(104, tok);
+        return;
+    }
+    while (ch != '"') {
+        tmpStr += ch;
+        i_Col++;
+        ch = _ReadChar();
+        if (ch == EOF || (ch == 0 && b_EndTag)) {
+            b_TrueEndTag = true;
+            Position edPos(i_Line, i_Col);
+            tok.Set(A_LEX_ERROR, K_CONSTANT_STRING, tmpStr, stPos, edPos);
+            v_Tokens.push_back(tok);
+            _LexError(103, tok);
+            return;
+        }
+        if (ch == '\n' || ch == '\t' || ch == '\f' || ch == '\r' || ch == '\b') {
+            //转义符，直接报错
+            _Untread();
+            Position edPos(i_Line, i_Col);
+            tok.Set(A_LEX_ERROR, K_CONSTANT_STRING, tmpStr, stPos, edPos);
+            v_Tokens.push_back(tok);
+            _LexError(104, tok);
+            return;
+        }
+    }
+    tmpStr += ch;
+    i_Col++;
+    Position edPos(i_Line, i_Col);
+    tok.Set(A_LEX_STRING, K_CONSTANT_STRING, tmpStr, stPos, edPos);
+    v_Tokens.push_back(tok);
+    return;
 }
 
-void Scanner::_ScanOPR() {
-    //TODO:扫描运算符
+bool Scanner::_ScanOPR() {
+    //扫描运算符
+    char ch = c_CurChar;
+    Token tok;
+    string tmpStr;
+    tmpStr.clear();
+    tmpStr = ch;
+    Position stPos(i_Line, i_Col);
+    switch (ch) {
+        case '+':
+            //对加号，有+23，+，++，+=
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_OPR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return false;
+            }
+            //再读一个，看一下是啥
+            if (ch == '+') {
+                //++
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_HIGH_PRIORITY, K_OPR_INC, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            else if (ch == '=') {
+                //+=
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ASSIGN, K_OPR_ADD_ASSIGN, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            else if (ch >= '0' && ch <='9') {
+                //+23，看一下加号后面有没有合法数字
+                c_CurChar = ch;
+                i_Col++;
+                bool flag = _ScanNumber();
+                if (flag) {
+                    //后面有合法数字，先把数字拿出来，合成一个正数字在放进去
+                    Token tmp = v_Tokens.back();
+                    v_Tokens.pop_back();
+                    string tmps = tmp.getStr_RealString();
+                    tmpStr += tmps;
+                    Position edPos = tmp.getPos_EndPos();
+                    e_KeywordKind kind = tmp.getEk_kind();
+                    if (kind == K_CONSTANT_REAL)
+                    {
+                        tok.Set(A_LEX_HIGH_PRIORITY, K_CONSTANT_POSITIVE_REAL, tmpStr, stPos, edPos);
+                    }
+                    else
+                    {
+                        tok.Set(A_LEX_HIGH_PRIORITY, K_CONSTANT_POSITIVE_INTEGER, tmpStr, stPos, edPos);
+                    }
+                    v_Tokens.push_back(tok);
+                }
+                else {
+                    //后面的数字不合法，加号视为独立运算符，但是要调整顺序，把放进去的错数字拿出来，先放进去加号，在把数字扔进去
+                    Token tmp = v_Tokens.back();
+                    v_Tokens.pop_back();
+                    Position edPos(i_Line, i_Col - 1);
+                    tok.Set(A_LEX_ADD_SUB, K_OPR_ADD, tmpStr, stPos, edPos);
+                    v_Tokens.push_back(tok);
+                    v_Tokens.push_back(tmp);
+                }
+            }
+            else if (ch == '.') {
+                //看看是不是数字
+                c_CurChar = ch;
+                i_Col++;
+                int flag = _ScanBoundary();
+                if (flag == 0) {
+                    //.只是界符，加号就只能是加号
+                    Position edPos(i_Line, i_Col - 1);
+                    tok.Set(A_LEX_ADD_SUB, K_OPR_ADD, tmpStr, stPos, edPos);
+                    Token tmp = v_Tokens.back();
+                    v_Tokens.pop_back();
+                    v_Tokens.push_back(tok);
+                    v_Tokens.push_back(tmp);
+                }
+                else if (flag == 1) {
+                    //后面是一个数字，变成正实常量
+                    Token tmp = v_Tokens.back();
+                    v_Tokens.pop_back();
+                    string tmps = tmp.getStr_RealString();
+                    tmpStr += tmps;
+                    Position edPos = tmp.getPos_EndPos();
+                    tok.Set(A_LEX_REAL, K_CONSTANT_POSITIVE_REAL, tmpStr, stPos, edPos);
+                    v_Tokens.push_back(tok);
+                }
+                else {
+                    //后面什么都不是，加号就只能是加号
+                    Position edPos(i_Line, i_Col - 1);
+                    tok.Set(A_LEX_ADD_SUB, K_OPR_ADD, tmpStr, stPos, edPos);
+                    Token tmp = v_Tokens.back();
+                    v_Tokens.pop_back();
+                    v_Tokens.push_back(tok);
+                    v_Tokens.push_back(tmp);
+                }
+            }
+            else {
+                //什么都不对，就直接一个独立的加号
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ADD_SUB, K_OPR_ADD, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            break;
+        case '-':
+            //对减号，有-23，-，--，-=
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_OPR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return false;
+            }
+            //再读一个，看一下是啥
+            if (ch == '-') {
+                //--
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_HIGH_PRIORITY, K_OPR_DEC, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            else if (ch == '=') {
+                //-=
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ASSIGN, K_OPR_SUB_ASSIGN, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            else if (ch >= '0' && ch <='9') {
+                //+23，看一下加号后面有没有合法数字
+                c_CurChar = ch;
+                i_Col++;
+                bool flag = _ScanNumber();
+                if (flag) {
+                    //后面有合法数字，先把数字拿出来，合成一个正数字在放进去
+                    Token tmp = v_Tokens.back();
+                    v_Tokens.pop_back();
+                    string tmps = tmp.getStr_RealString();
+                    tmpStr += tmps;
+                    Position edPos = tmp.getPos_EndPos();
+                    e_KeywordKind kind = tmp.getEk_kind();
+                    if (kind == K_CONSTANT_REAL)
+                    {
+                        tok.Set(A_LEX_HIGH_PRIORITY, K_CONSTANT_NEGATIVE_REAL, tmpStr, stPos, edPos);
+                    }
+                    else
+                    {
+                        tok.Set(A_LEX_HIGH_PRIORITY, K_CONSTANT_NEGATIVE_INTEGER, tmpStr, stPos, edPos);
+                    }
+                    v_Tokens.push_back(tok);
+                }
+                else {
+                    //后面的数字不合法，加号视为独立运算符，但是要调整顺序，把放进去的错数字拿出来，先放进去加号，在把数字扔进去
+                    Token tmp = v_Tokens.back();
+                    v_Tokens.pop_back();
+                    Position edPos(i_Line, i_Col - 1);
+                    tok.Set(A_LEX_ADD_SUB, K_OPR_SUB, tmpStr, stPos, edPos);
+                    v_Tokens.push_back(tok);
+                    v_Tokens.push_back(tmp);
+                }
+            }
+            else if (ch == '.') {
+                //看看是不是数字
+                c_CurChar = ch;
+                i_Col++;
+                int flag = _ScanBoundary();
+                if (flag == 0) {
+                    //.只是界符，减号就只能是减号
+                    Position edPos(i_Line, i_Col - 1);
+                    tok.Set(A_LEX_ADD_SUB, K_OPR_SUB, tmpStr, stPos, edPos);
+                    Token tmp = v_Tokens.back();
+                    v_Tokens.pop_back();
+                    v_Tokens.push_back(tok);
+                    v_Tokens.push_back(tmp);
+                }
+                else if (flag == 1) {
+                    //后面是一个数字，变成正实常量
+                    Token tmp = v_Tokens.back();
+                    v_Tokens.pop_back();
+                    string tmps = tmp.getStr_RealString();
+                    tmpStr += tmps;
+                    Position edPos = tmp.getPos_EndPos();
+                    tok.Set(A_LEX_REAL, K_CONSTANT_NEGATIVE_REAL, tmpStr, stPos, edPos);
+                    v_Tokens.push_back(tok);
+                }
+                else {
+                    //后面什么都不是，减号就只能是减号
+                    Position edPos(i_Line, i_Col - 1);
+                    tok.Set(A_LEX_ADD_SUB, K_OPR_SUB, tmpStr, stPos, edPos);
+                    Token tmp = v_Tokens.back();
+                    v_Tokens.pop_back();
+                    v_Tokens.push_back(tok);
+                    v_Tokens.push_back(tmp);
+                }
+            }
+            else {
+                //什么都不对，就直接一个独立的加号
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ADD_SUB, K_OPR_SUB, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            break;
+        case '*':
+            //对乘号，有* *=
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_OPR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return false;
+            }
+            if (ch == '=') {
+                //*=
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ASSIGN, K_OPR_MUL_ASSIGN, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            else {
+                //*
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_MUL_DIV_MOD, K_OPR_MUL, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+        case '/':
+            //对除号，有/ /= 和注释
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_OPR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return false;
+            }
+            if (ch == '=') {
+                // /=
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ASSIGN, K_OPR_DIV_ASSIGN, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            else if (ch  == '/'){
+                //是注释
+                tmpStr += ch;
+                i_Col++;
+                _ScanComment(tmpStr, stPos);
+            }
+            else {
+                // /
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_MUL_DIV_MOD, K_OPR_DIV, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            break;
+        case '%':
+            //对取模号，有 % %=
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_OPR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return false;
+            }
+            if (ch == '=') {
+                //%=
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ASSIGN, K_OPR_MOD_ASSIGN, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            else {
+                //%
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_MUL_DIV_MOD, K_OPR_MOD, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            break;
+        case '=':
+            //对等号，有 = ==
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_OPR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return false;
+            }
+            if (ch == '=') {
+                //==
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_EQUAL, K_OPR_EQU, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            else {
+                //=
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ASSIGN, K_OPR_ASSIGN, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            break;
+        case '&':
+            //有 & &= &&
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_OPR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return false;
+            }
+            if (ch == '=') {
+                //&=
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ASSIGN, K_OPR_AND_ASSIGN, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            else if (ch == '&') {
+                //&&
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_AND, K_OPR_AND, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            else {
+                //&
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_AND_BIT, K_OPR_AND_BIT, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            break;
+        case '|':
+            // | |= ||
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_OPR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return false;
+            }
+            if (ch == '=') {
+                //|=
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ASSIGN, K_OPR_OR_ASSIGN, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            else if (ch == '|') {
+                //||
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_OR, K_OPR_OR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            else {
+                //|
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_OR_BIT, K_OPR_OR_BIT, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            break;
+        case '^':
+            //有 ^ ^=
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_OPR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return false;
+            }
+            if (ch == '=') {
+                //^=
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ASSIGN, K_OPR_NOT_ASSIGN, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            else {
+                //^
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_XOR_BIT, K_OPR_XOR_BIT, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            break;
+        case '~':
+            //有 ~
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_OPR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return false;
+            }
+            else {
+                //~
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_HIGH_PRIORITY, K_OPR_NOT_BIT, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            break;
+        case '!':
+            //有 ! !=
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_OPR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return false;
+            }
+            if (ch == '=') {
+                // !=
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_EQUAL, K_OPR_NEQU, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            else {
+                // !
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_HIGH_PRIORITY, K_OPR_NOT_BIT, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            break;
+        case '?':
+            //有 ?
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_OPR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return false;
+            }
+            else {
+                //?
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_TERNARY, K_OPR_TERNARY_QUESTION, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            break;
+        case ':':
+            //有 :
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_OPR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return false;
+            }
+            else {
+                //:
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_TERNARY, K_OPR_TERNARY_COLON, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            break;
+        case '<':
+            // 有 < << <= <<=
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_OPR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return false;
+            }
+            if (ch == '=') {
+                //<=
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_COMPARE, K_OPR_LE, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            else if (ch == '<') {
+                //<< <<=
+                tmpStr += ch;
+                i_Col++;
+                ch = _ReadChar();
+                if (ch == EOF || (ch == 0 && b_EndTag)) {
+                    b_TrueEndTag = true;
+                    Position edPos(i_Line, i_Col);
+                    tok.Set(A_LEX_ERROR, K_OPR, tmpStr, stPos, edPos);
+                    v_Tokens.push_back(tok);
+                    _LexError(103, tok);
+                    return false;
+                }
+                if (ch == '=') {
+                    //<<=
+                    tmpStr += ch;
+                    i_Col++;
+                    Position edPos(i_Line, i_Col);
+                    tok.Set(A_LEX_ASSIGN, K_OPR_SHIFT_LEFT_ASSIGN, tmpStr, stPos, edPos);
+                    v_Tokens.push_back(tok);
+                }
+                else {
+                    //<<
+                    _Untread();
+                    Position edPos(i_Line, i_Col);
+                    tok.Set(A_LEX_SHIFT, K_OPR_SHIFT_LEFT, tmpStr, stPos, edPos);
+                    v_Tokens.push_back(tok);
+                }
+
+            }
+            else {
+                //<
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_COMPARE, K_OPR_LT, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            break;
+        case '>':
+            // 有 > >> >>> >= >>= >>>=
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_OPR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return false;
+            }
+            if (ch == '=') {
+                //>=
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_COMPARE, K_OPR_GE, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            else if (ch == '>') {
+                //>> >>> >>= >>>=
+                tmpStr += ch;
+                i_Col++;
+                ch = _ReadChar();
+                if (ch == EOF || (ch == 0 && b_EndTag)) {
+                    b_TrueEndTag = true;
+                    Position edPos(i_Line, i_Col);
+                    tok.Set(A_LEX_ERROR, K_OPR, tmpStr, stPos, edPos);
+                    v_Tokens.push_back(tok);
+                    _LexError(103, tok);
+                    return false;
+                }
+                if (ch == '=') {
+                    //>>=
+                    tmpStr += ch;
+                    i_Col++;
+                    Position edPos(i_Line, i_Col);
+                    tok.Set(A_LEX_ASSIGN, K_OPR_SHIFT_RIGHT_ASSIGN, tmpStr, stPos, edPos);
+                    v_Tokens.push_back(tok);
+                }
+                else if (ch == '>') {
+                    //>>> >>>=
+                    tmpStr += ch;
+                    i_Col++;
+                    ch = _ReadChar();
+                    if (ch == EOF || (ch == 0 && b_EndTag)) {
+                        b_TrueEndTag = true;
+                        Position edPos(i_Line, i_Col);
+                        tok.Set(A_LEX_ERROR, K_OPR, tmpStr, stPos, edPos);
+                        v_Tokens.push_back(tok);
+                        _LexError(103, tok);
+                        return false;
+                    }
+                    if (ch == '=') {
+                        //>>>=
+                        tmpStr += ch;
+                        i_Col++;
+                        Position edPos(i_Line, i_Col);
+                        tok.Set(A_LEX_ASSIGN, K_OPR_SHIFT_ZERO_ASSIGN, tmpStr, stPos, edPos);
+                        v_Tokens.push_back(tok);
+                    }
+                    else {
+                        //>>>
+                        _Untread();
+                        Position edPos(i_Line, i_Col);
+                        tok.Set(A_LEX_SHIFT, K_OPR_SHIFT_ZERO, tmpStr, stPos, edPos);
+                        v_Tokens.push_back(tok);
+                    }
+                }
+                else {
+                    //>>
+                    _Untread();
+                    Position edPos(i_Line, i_Col);
+                    tok.Set(A_LEX_SHIFT, K_OPR_SHIFT_RIGHT, tmpStr, stPos, edPos);
+                    v_Tokens.push_back(tok);
+                }
+            }
+            else {
+                //>
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_COMPARE, K_OPR_GT, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            break;
+        default:break;
+    }
+    return true;
 }
 
-void Scanner::_ScanBoundary() {
-    //TODO:扫描界符
+int Scanner::_ScanBoundary() {
+    //扫描界符
+    char ch = c_CurChar;
+    Token tok;
+    string tmpStr;
+    tmpStr.clear();
+    tmpStr = ch;
+    Position stPos(i_Line, i_Col);
+    Position edPos;
+    switch (ch) {
+        case '{':
+            edPos.Set(i_Line, i_Col);
+            tok.Set(A_LEX_BOUNDARY, K_BOUNDARY_BRACES_LEFT, tmpStr, stPos, edPos);
+            v_Tokens.push_back(tok);
+            break;
+        case '}':
+            edPos.Set(i_Line, i_Col);
+            tok.Set(A_LEX_BOUNDARY, K_BOUNDARY_BRACES_RIGHT, tmpStr, stPos, edPos);
+            v_Tokens.push_back(tok);
+            break;
+        case '[':
+            edPos.Set(i_Line, i_Col);
+            tok.Set(A_LEX_BOUNDARY, K_BOUNDARY_BRACKET_LEFT, tmpStr, stPos, edPos);
+            v_Tokens.push_back(tok);
+            break;
+        case ']':
+            edPos.Set(i_Line, i_Col);
+            tok.Set(A_LEX_BOUNDARY, K_BOUNDARY_BRACKET_RIGHT, tmpStr, stPos, edPos);
+            v_Tokens.push_back(tok);
+            break;
+        case '(':
+            edPos.Set(i_Line, i_Col);
+            tok.Set(A_LEX_BOUNDARY, K_BOUNDARY_PARENTHESES_LEFT, tmpStr, stPos, edPos);
+            v_Tokens.push_back(tok);
+            break;
+        case ')':
+            edPos.Set(i_Line, i_Col);
+            tok.Set(A_LEX_BOUNDARY, K_BOUNDARY_PARENTHESES_RIGHT, tmpStr, stPos, edPos);
+            v_Tokens.push_back(tok);
+            break;
+        case ',':
+            edPos.Set(i_Line, i_Col);
+            tok.Set(A_LEX_BOUNDARY, K_BOUNDARY_COMMA, tmpStr, stPos, edPos);
+            v_Tokens.push_back(tok);
+            break;
+        case ';':
+            edPos.Set(i_Line, i_Col);
+            tok.Set(A_LEX_BOUNDARY, K_BOUNDARY_SEMICOLON, tmpStr, stPos, edPos);
+            v_Tokens.push_back(tok);
+            break;
+        case '.':
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                edPos.Set(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_BOUNDARY, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return -1;
+            }
+            if (ch >= '0' && ch < '9') {
+                //可能是小数点
+                while (ch >= '0' && ch < '9') {
+                    //.123
+                    tmpStr += ch;
+                    i_Col++;
+                    ch = _ReadChar();
+                    if (ch == EOF || (ch == 0 && b_EndTag)) {
+                        b_TrueEndTag = true;
+                        edPos.Set(i_Line, i_Col);
+                        tok.Set(A_LEX_ERROR, K_BOUNDARY, tmpStr, stPos, edPos);
+                        v_Tokens.push_back(tok);
+                        _LexError(103, tok);
+                        return -1;
+                    }
+                }
+                if (ch == 'E' || ch == 'e') {
+                    //.123E，继续读
+                    tmpStr += ch;
+                    i_Col++;
+                    ch = _ReadChar();
+                    if (ch == EOF || (ch == 0 && b_EndTag)) {
+                        b_TrueEndTag = true;
+                        edPos.Set(i_Line, i_Col);
+                        tok.Set(A_LEX_ERROR, K_BOUNDARY, tmpStr, stPos, edPos);
+                        v_Tokens.push_back(tok);
+                        _LexError(103, tok);
+                        return -1;
+                    }
+                    if (ch >= '0' && ch <= '9') {
+                        //.123E2
+                        while (ch >= '0' && ch < '9') {
+                            tmpStr += ch;
+                            i_Col++;
+                            ch = _ReadChar();
+                            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                                b_TrueEndTag = true;
+                                edPos.Set(i_Line, i_Col);
+                                tok.Set(A_LEX_ERROR, K_BOUNDARY, tmpStr, stPos, edPos);
+                                v_Tokens.push_back(tok);
+                                _LexError(103, tok);
+                                return -1;
+                            }
+                        }
+                        if (ch == 'F' || ch == 'f' || ch == 'D' || ch == 'd') {
+                            //.123E3F
+                            tmpStr += ch;
+                            i_Col++;
+                            edPos.Set(i_Line, i_Col);
+                            tok.Set(A_LEX_REAL, K_CONSTANT_REAL, tmpStr, stPos, edPos);
+                            v_Tokens.push_back(tok);
+                            return 1;
+                        }
+                        else {
+                            //.123E2
+                            _Untread();
+                            edPos.Set(i_Line, i_Col);
+                            tok.Set(A_LEX_REAL, K_CONSTANT_REAL, tmpStr, stPos, edPos);
+                            v_Tokens.push_back(tok);
+                            return 1;
+                        }
+                    }
+                    else {
+                        //.123E没有数字，出错
+                        _Untread();
+                        edPos.Set(i_Line, i_Col);
+                        tok.Set(A_LEX_ERROR, K_CONSTANT_REAL, tmpStr, stPos, edPos);
+                        v_Tokens.push_back(tok);
+                        _LexError(100, tok);
+                        return -1;
+                    }
+                }
+                else if (ch == 'F' || ch == 'f' || ch == 'D' || ch == 'd') {
+                    //.123F
+                    tmpStr += ch;
+                    i_Col++;
+                    edPos.Set(i_Line, i_Col);
+                    tok.Set(A_LEX_REAL, K_CONSTANT_REAL, tmpStr, stPos, edPos);
+                    v_Tokens.push_back(tok);
+                    return 1;
+                }
+                else {
+                    //.123
+                    _Untread();
+                    edPos.Set(i_Line, i_Col);
+                    tok.Set(A_LEX_REAL, K_CONSTANT_REAL, tmpStr, stPos, edPos);
+                    v_Tokens.push_back(tok);
+                    return 1;
+                }
+            }
+            else {
+                //只是界符
+                _Untread();
+                edPos.Set(i_Line, i_Col);
+                tok.Set(A_LEX_BOUNDARY, K_BOUNDARY_PERIOD, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+            }
+            break;
+        default:break;
+    }
+    return 0;
 }
 
-void Scanner::_ScanComment() {
-    //TODO:扫描注释
+void Scanner::_ScanComment(string tmpStr, Position stPos) {
+    Token tok;
+    //扫描注释
+    char ch = _ReadChar();
+    if (ch == EOF || (ch == 0 && b_EndTag)) {
+        b_TrueEndTag = true;
+        Position edPos(i_Line, i_Col);
+        tok.Set(A_LEX_ERROR, K_CONSTANT_STRING, tmpStr, stPos, edPos);
+        v_Tokens.push_back(tok);
+        _LexError(103, tok);
+        return;
+    }
+    if (ch == '\n' || ch == '\t' || ch == '\f' || ch == '\r' || ch == '\b') {
+        //转义符，终止
+        _Untread();
+        Position edPos(i_Line, i_Col);
+        tok.Set(A_LEX_COMMENT, K_COMMENT, tmpStr, stPos, edPos);
+        return;
+    }
+    while (!(ch == '\n' || ch == '\t' || ch == '\f' || ch == '\r' || ch == '\b')) {
+        tmpStr += ch;
+        i_Col++;
+        ch = _ReadChar();
+        if (ch == '\n' || ch == '\t' || ch == '\f' || ch == '\r' || ch == '\b') {
+            //转义符，终止
+            _Untread();
+            Position edPos(i_Line, i_Col);
+            tok.Set(A_LEX_COMMENT, K_COMMENT, tmpStr, stPos, edPos);
+            return;
+        }
+    }
 }

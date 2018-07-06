@@ -1,4 +1,3 @@
-/*---- ²âÊÔÓÃÀıÎÄ¼ş ----*/
 static final float PI = 3.141592654f;
 static final double ME = 1.9e-31;
 static final char[] map = {'\u661F', '\t', '*', '\206', ' ', '\''};

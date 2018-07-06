@@ -28,7 +28,7 @@ void Token::setEk_kind(e_KeywordKind ek_kind) {
     Token::ek_kind = ek_kind;
 }
 
-const string &Token::getStr_RealString() const {
+string Token::getStr_RealString() {
     return str_RealString;
 }
 
@@ -44,7 +44,7 @@ void Token::setPos_StartPos(const Position &pos_StartPos) {
     Token::pos_StartPos = pos_StartPos;
 }
 
-const Position &Token::getPos_EndPos() const {
+Position Token::getPos_EndPos() {
     return pos_EndPos;
 }
 
