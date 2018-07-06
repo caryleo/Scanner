@@ -233,12 +233,18 @@ void Scanner::_Scan() {
             _ScanString();
             break;
         case '+':
-            i_Col++;
-            _ScanAdd();
-            break;
         case '-':
+        case '*':
+        case '/':
+        case '=':
+        case '&':
+        case '|':
+        case '^':
+        case '~':
+        case '<':
+        case '>':
             i_Col++;
-            _ScanSub();
+            _ScanOPR();
             break;
         default:
             break;
@@ -1368,10 +1374,14 @@ void Scanner::_ScanString() {
     //TODO:扫描字符串
 }
 
-void Scanner::_ScanAdd() {
-    //TODO:扫描加号逻辑
+void Scanner::_ScanOPR() {
+
 }
 
-void Scanner::_ScanSub() {
-    //TODO:扫描减号逻辑
+void Scanner::_ScanBoundary() {
+
+}
+
+void Scanner::_ScanComment() {
+
 }

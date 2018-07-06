@@ -126,13 +126,17 @@ private:
      */
     void _ScanString();
     /**
-     * 扫描加号逻辑
+     * 扫描运算符
      */
-    void _ScanAdd();
+    void _ScanOPR();
     /**
-     * 扫描减号逻辑
+     * 扫描界符
      */
-    void _ScanSub();
+    void _ScanBoundary();
+    /**
+     * 扫描注释
+     */
+    void _ScanComment();
 };
 
 
