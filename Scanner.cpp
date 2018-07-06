@@ -413,7 +413,21 @@ bool Scanner::_ScanNumber() {
                         _LexError(103, tok);
                         return false;
                     }
-                    if (!(ch >= '0' && ch <= '9')) {
+                    if (ch == '-') {
+                        //E后面很可能跟了一个负号
+                        tmpStr += ch;
+                        i_Col++;
+                        ch = _ReadChar();
+                        if (ch == EOF || (ch == 0 && b_EndTag)) {
+                            b_TrueEndTag = true;
+                            Position edPos(i_Line, i_Col);
+                            tok.Set(A_LEX_ERROR, K_CONSTANT_REAL, tmpStr, stPos, edPos);
+                            v_Tokens.push_back(tok);
+                            _LexError(103, tok);
+                            return false;
+                        }
+                    }
+                    if ((!(ch >= '0' && ch <= '9'))) {
                         //0.E后面不是数字，出错
                         _Untread();
                         Position edPos(i_Line, i_Col);
@@ -501,6 +515,20 @@ bool Scanner::_ScanNumber() {
                         _LexError(103, tok);
                         return false;
                     }
+                    if (ch == '-') {
+                        //E后面很可能跟了一个负号
+                        tmpStr += ch;
+                        i_Col++;
+                        ch = _ReadChar();
+                        if (ch == EOF || (ch == 0 && b_EndTag)) {
+                            b_TrueEndTag = true;
+                            Position edPos(i_Line, i_Col);
+                            tok.Set(A_LEX_ERROR, K_CONSTANT_REAL, tmpStr, stPos, edPos);
+                            v_Tokens.push_back(tok);
+                            _LexError(103, tok);
+                            return false;
+                        }
+                    }
                     if (!(ch >= '0' && ch <= '9')) {
                         //0.E后面不是数字，出错
                         if (ch == 'F' || ch == 'f' || ch == 'D' || ch == 'd') {
@@ -580,6 +608,20 @@ bool Scanner::_ScanNumber() {
                 v_Tokens.push_back(tok);
                 _LexError(103, tok);
                 return false;
+            }
+            if (ch == '-') {
+                //E后面很可能跟了一个负号
+                tmpStr += ch;
+                i_Col++;
+                ch = _ReadChar();
+                if (ch == EOF || (ch == 0 && b_EndTag)) {
+                    b_TrueEndTag = true;
+                    Position edPos(i_Line, i_Col);
+                    tok.Set(A_LEX_ERROR, K_CONSTANT_REAL, tmpStr, stPos, edPos);
+                    v_Tokens.push_back(tok);
+                    _LexError(103, tok);
+                    return false;
+                }
             }
             if (!(ch >= '0' && ch <= '9')) {
                 //E后面没有数字，出错
@@ -825,7 +867,7 @@ bool Scanner::_ScanNumber() {
                 return true;
             }
             else if (ch == 'E' || ch == 'e') {
-                //1.32E3继续读
+                //1.32E继续读
                 tmpStr += ch;
                 i_Col++;
                 ch = _ReadChar();
@@ -836,6 +878,20 @@ bool Scanner::_ScanNumber() {
                     v_Tokens.push_back(tok);
                     _LexError(103, tok);
                     return false;
+                }
+                if (ch == '-') {
+                    //E后面很可能跟了一个负号
+                    tmpStr += ch;
+                    i_Col++;
+                    ch = _ReadChar();
+                    if (ch == EOF || (ch == 0 && b_EndTag)) {
+                        b_TrueEndTag = true;
+                        Position edPos(i_Line, i_Col);
+                        tok.Set(A_LEX_ERROR, K_CONSTANT_REAL, tmpStr, stPos, edPos);
+                        v_Tokens.push_back(tok);
+                        _LexError(103, tok);
+                        return false;
+                    }
                 }
                 if (!(ch >= '0' && ch <= '9')) {
                     //E后面没有数字，出错
@@ -886,7 +942,7 @@ bool Scanner::_ScanNumber() {
             }
         }
         else if (ch == 'E' || ch == 'e') {
-            //123E3继续读
+            //123E继续读
             tmpStr += ch;
             i_Col++;
             ch = _ReadChar();
@@ -897,6 +953,20 @@ bool Scanner::_ScanNumber() {
                 v_Tokens.push_back(tok);
                 _LexError(103, tok);
                 return false;
+            }
+            if (ch == '-') {
+                //E后面很可能跟了一个负号
+                tmpStr += ch;
+                i_Col++;
+                ch = _ReadChar();
+                if (ch == EOF || (ch == 0 && b_EndTag)) {
+                    b_TrueEndTag = true;
+                    Position edPos(i_Line, i_Col);
+                    tok.Set(A_LEX_ERROR, K_CONSTANT_REAL, tmpStr, stPos, edPos);
+                    v_Tokens.push_back(tok);
+                    _LexError(103, tok);
+                    return false;
+                }
             }
             if (!(ch >= '0' && ch <= '9')) {
                 //E后面没有数字，出错
@@ -2181,7 +2251,7 @@ bool Scanner::_ScanOPR() {
                 // !
                 _Untread();
                 Position edPos(i_Line, i_Col);
-                tok.Set(A_LEX_HIGH_PRIORITY, K_OPR_NOT_BIT, tmpStr, stPos, edPos);
+                tok.Set(A_LEX_HIGH_PRIORITY, K_OPR_NOT, tmpStr, stPos, edPos);
                 v_Tokens.push_back(tok);
             }
             break;
@@ -2382,12 +2452,12 @@ int Scanner::_ScanBoundary() {
     switch (ch) {
         case '{':
             edPos.Set(i_Line, i_Col);
-            tok.Set(A_LEX_BOUNDARY, K_BOUNDARY_BRACES_LEFT, tmpStr, stPos, edPos);
+            tok.Set(A_LEX_BRACES, K_BOUNDARY_BRACES_LEFT, tmpStr, stPos, edPos);
             v_Tokens.push_back(tok);
             break;
         case '}':
             edPos.Set(i_Line, i_Col);
-            tok.Set(A_LEX_BOUNDARY, K_BOUNDARY_BRACES_RIGHT, tmpStr, stPos, edPos);
+            tok.Set(A_LEX_BRACES, K_BOUNDARY_BRACES_RIGHT, tmpStr, stPos, edPos);
             v_Tokens.push_back(tok);
             break;
         case '[':
@@ -2412,12 +2482,12 @@ int Scanner::_ScanBoundary() {
             break;
         case ',':
             edPos.Set(i_Line, i_Col);
-            tok.Set(A_LEX_BOUNDARY, K_BOUNDARY_COMMA, tmpStr, stPos, edPos);
+            tok.Set(A_LEX_COMMA, K_BOUNDARY_COMMA, tmpStr, stPos, edPos);
             v_Tokens.push_back(tok);
             break;
         case ';':
             edPos.Set(i_Line, i_Col);
-            tok.Set(A_LEX_BOUNDARY, K_BOUNDARY_SEMICOLON, tmpStr, stPos, edPos);
+            tok.Set(A_LEX_SEMICOLON, K_BOUNDARY_SEMICOLON, tmpStr, stPos, edPos);
             v_Tokens.push_back(tok);
             break;
         case '.':
@@ -2458,6 +2528,20 @@ int Scanner::_ScanBoundary() {
                         v_Tokens.push_back(tok);
                         _LexError(103, tok);
                         return -1;
+                    }
+                    if (ch == '-') {
+                        //E后面很可能跟了一个负号
+                        tmpStr += ch;
+                        i_Col++;
+                        ch = _ReadChar();
+                        if (ch == EOF || (ch == 0 && b_EndTag)) {
+                            b_TrueEndTag = true;
+                            Position edPos(i_Line, i_Col);
+                            tok.Set(A_LEX_ERROR, K_CONSTANT_REAL, tmpStr, stPos, edPos);
+                            v_Tokens.push_back(tok);
+                            _LexError(103, tok);
+                            return false;
+                        }
                     }
                     if (ch >= '0' && ch <= '9') {
                         //.123E2
