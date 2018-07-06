@@ -987,7 +987,29 @@ void Scanner::_LexError(int errorCode, Token tok) {
             cerr << "十六进制字符格式错误" << endl;
             break;
         case 108:
-            cerr << "单引号格式错误" << endl;
+            cerr << "字符单引号格式错误" << endl;
+            break;
+        case 109:
+            cerr << "字符反斜杠格式错误" << endl;
+            break;
+        case 110:
+            cerr << "字符回车格式错误" << endl;
+            break;
+        case 111:
+            cerr << "字符换行格式错误" << endl;
+            break;
+        case 112:
+            cerr << "字符走纸换页格式错误" << endl;
+            break;
+        case 113:
+            cerr << "字符TAB格式错误" << endl;
+            break;
+        case 114:
+            cerr << "字符退格格式错误" << endl;
+            break;
+        case 115:
+            cerr << "转义字符格式错误" << endl;
+            break;
         default:
             cerr << "未知错误" << endl;
             break;
@@ -1092,7 +1114,7 @@ void Scanner::_ScanCharacter() {
                 if (ch == '\'') {
                     //再读读到单引号，可以正确结束
                     Position edPos(i_Line, i_Col);
-                    tok.Set(A_LEX_CHAR, K_CONSTANT_CHAR, tmpStr, stPos, edPos);
+                    tok.Set(A_LEX_CHAR, K_ESCAPE_OCT_CHAR, tmpStr, stPos, edPos);
                     v_Tokens.push_back(tok);
                     return;
                 }
@@ -1132,7 +1154,7 @@ void Scanner::_ScanCharacter() {
                     tmpStr += ch;
                     i_Col++;
                     Position edPos(i_Line, i_Col);
-                    tok.Set(A_LEX_ERROR, K_CONSTANT_CHAR, tmpStr, stPos, edPos);
+                    tok.Set(A_LEX_ERROR, K_ESCAPE_OCT_CHAR, tmpStr, stPos, edPos);
                     v_Tokens.push_back(tok);
                     _LexError(106, tok);
                     return;
@@ -1141,7 +1163,7 @@ void Scanner::_ScanCharacter() {
             else {
                 //向后读了三个字符，其中有单引号，提前结束
                 Position edPos(i_Line, i_Col);
-                tok.Set(A_LEX_CHAR, K_CONSTANT_CHAR, tmpStr, stPos, edPos);
+                tok.Set(A_LEX_CHAR, K_ESCAPE_OCT_CHAR, tmpStr, stPos, edPos);
                 v_Tokens.push_back(tok);
                 return;
             }
@@ -1207,7 +1229,7 @@ void Scanner::_ScanCharacter() {
                 if (ch == '\'') {
                     //再读读到单引号，可以正确结束
                     Position edPos(i_Line, i_Col);
-                    tok.Set(A_LEX_CHAR, K_CONSTANT_CHAR, tmpStr, stPos, edPos);
+                    tok.Set(A_LEX_CHAR, K_ESCAPE_HEX_CHAR, tmpStr, stPos, edPos);
                     v_Tokens.push_back(tok);
                     return;
                 }
@@ -1247,11 +1269,17 @@ void Scanner::_ScanCharacter() {
                     tmpStr += ch;
                     i_Col++;
                     Position edPos(i_Line, i_Col);
-                    tok.Set(A_LEX_ERROR, K_CONSTANT_CHAR, tmpStr, stPos, edPos);
+                    tok.Set(A_LEX_ERROR, K_ESCAPE_HEX_CHAR, tmpStr, stPos, edPos);
                     v_Tokens.push_back(tok);
                     _LexError(107, tok);
                     return;
                 }
+            } else {
+                //向后读了四个字符，其中有单引号，提前结束
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_CHAR, K_ESCAPE_HEX_CHAR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                return;
             }
         }
         else if (ch == '\'') {
@@ -1282,7 +1310,7 @@ void Scanner::_ScanCharacter() {
                 tmpStr += ch;
                 i_Col++;
                 Position edPos(i_Line, i_Col);
-                tok.Set(A_LEX_CHAR, K_CONSTANT_CHAR, tmpStr, stPos, edPos);
+                tok.Set(A_LEX_CHAR, K_ESCAPE_SINGLE_QUO, tmpStr, stPos, edPos);
                 v_Tokens.push_back(tok);
                 return;
             }
@@ -1293,25 +1321,257 @@ void Scanner::_ScanCharacter() {
             }
         }
         else if (ch == '\\') {
-            //TODO:判断反斜杠
+            //判断反斜杠
+            tmpStr += ch;
+            i_Col++;
+            //再读一个字符
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_CONSTANT_CHAR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return;
+            }
+            if (ch == '\n' || ch == '\t' || ch == '\f' || ch == '\r' || ch == '\b') {
+                //转义符，直接报错
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_ESCAPE_BACK_SLASH, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(104, tok);
+                return;
+            }
+            if (ch == '\'') {
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_CHAR, K_ESCAPE_BACK_SLASH, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                return;
+            }
+            else {
+                _FillUselessCharacter(109, tmpStr, stPos, ch);
+                return;
+            }
         }
         else if (ch == 'r') {
-            //TODO:判断\r
+            //判断\r
+            tmpStr += ch;
+            i_Col++;
+            //再读一个字符
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_CONSTANT_CHAR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return;
+            }
+            if (ch == '\n' || ch == '\t' || ch == '\f' || ch == '\r' || ch == '\b') {
+                //转义符，直接报错
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_ESCAPE_CR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(104, tok);
+                return;
+            }
+            if (ch == '\'') {
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_CHAR, K_ESCAPE_CR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                return;
+            }
+            else {
+                _FillUselessCharacter(110, tmpStr, stPos, ch);
+                return;
+            }
         }
         else if (ch == 'n') {
-            //TODO:判断\n
+            //判断\n
+            tmpStr += ch;
+            i_Col++;
+            //再读一个字符
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_CONSTANT_CHAR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return;
+            }
+            if (ch == '\n' || ch == '\t' || ch == '\f' || ch == '\r' || ch == '\b') {
+                //转义符，直接报错
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_ESCAPE_LF, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(104, tok);
+                return;
+            }
+            if (ch == '\'') {
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_CHAR, K_ESCAPE_LF, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                return;
+            }
+            else {
+                _FillUselessCharacter(111, tmpStr, stPos, ch);
+                return;
+            }
         }
         else if (ch == 'f') {
-            //TODO:判断\f
+            //判断\f
+            tmpStr += ch;
+            i_Col++;
+            //再读一个字符
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_CONSTANT_CHAR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return;
+            }
+            if (ch == '\n' || ch == '\t' || ch == '\f' || ch == '\r' || ch == '\b') {
+                //转义符，直接报错
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_ESCAPE_FF, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(104, tok);
+                return;
+            }
+            if (ch == '\'') {
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_CHAR, K_ESCAPE_FF, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                return;
+            }
+            else {
+                _FillUselessCharacter(112, tmpStr, stPos, ch);
+                return;
+            }
         }
         else if (ch == 't') {
-            //TODO:判断\t
+            //判断\t
+            tmpStr += ch;
+            i_Col++;
+            //再读一个字符
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_CONSTANT_CHAR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return;
+            }
+            if (ch == '\n' || ch == '\t' || ch == '\f' || ch == '\r' || ch == '\b') {
+                //转义符，直接报错
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_ESCAPE_FF, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(104, tok);
+                return;
+            }
+            if (ch == '\'') {
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_CHAR, K_ESCAPE_FF, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                return;
+            }
+            else {
+                _FillUselessCharacter(113, tmpStr, stPos, ch);
+                return;
+            }
         }
         else if (ch == 'b') {
-            //TODO:判断\b
+            //判断\b
+            tmpStr += ch;
+            i_Col++;
+            //再读一个字符
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_CONSTANT_CHAR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return;
+            }
+            if (ch == '\n' || ch == '\t' || ch == '\f' || ch == '\r' || ch == '\b') {
+                //转义符，直接报错
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_ESCAPE_BACKSPACE, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(104, tok);
+                return;
+            }
+            if (ch == '\'') {
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_CHAR, K_ESCAPE_BACKSPACE, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                return;
+            }
+            else {
+                _FillUselessCharacter(114, tmpStr, stPos, ch);
+                return;
+            }
         }
         else {
-            //TODO:非法，报错
+            //非法，报错
+            tmpStr += ch;
+            i_Col++;
+            //再读一个字符
+            ch = _ReadChar();
+            if (ch == EOF || (ch == 0 && b_EndTag)) {
+                b_TrueEndTag = true;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_CONSTANT_CHAR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(103, tok);
+                return;
+            }
+            if (ch == '\n' || ch == '\t' || ch == '\f' || ch == '\r' || ch == '\b') {
+                //转义符，直接报错
+                _Untread();
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_CONSTANT_CHAR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(104, tok);
+                return;
+            }
+            if (ch == '\'') {
+                tmpStr += ch;
+                i_Col++;
+                Position edPos(i_Line, i_Col);
+                tok.Set(A_LEX_ERROR, K_CONSTANT_CHAR, tmpStr, stPos, edPos);
+                v_Tokens.push_back(tok);
+                _LexError(115, tok);
+                return;
+            }
+            else {
+                _FillUselessCharacter(115, tmpStr, stPos, ch);
+                return;
+            }
         }
     }
     else {
