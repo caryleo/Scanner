@@ -243,9 +243,29 @@ void Scanner::_Scan() {
         case '~':
         case '<':
         case '>':
+        case '%':
+        case '!':
+        case '?':
+        case ':':
             i_Col++;
             _ScanOPR();
             break;
+        case '{':
+        case '}':
+        case '[':
+        case ']':
+        case '(':
+        case ')':
+        case ',':
+        case '.':
+        case ';':
+            i_Col++;
+            _ScanBoundary();
+            break;
+        case '\f':
+        case '\b':
+        case '\r':
+            //TODO:特殊转义符逻辑
         default:
             break;
     }
@@ -1375,13 +1395,13 @@ void Scanner::_ScanString() {
 }
 
 void Scanner::_ScanOPR() {
-
+    //TODO:扫描运算符
 }
 
 void Scanner::_ScanBoundary() {
-
+    //TODO:扫描界符
 }
 
 void Scanner::_ScanComment() {
-
+    //TODO:扫描注释
 }
