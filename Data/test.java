@@ -9,7 +9,7 @@ public class LexTest
     for (;i<x.ival;i++) {
         carry+=((long)x.words[i]&0xffffffffL)+y_ext;
         result.words[i]=(int)carry|0xHEX;
-        carry>>>=32;    //Comment - ÕâÊÇÒ»¸ö×¢ÊÍ
+        carry>>>=32;    //Comment - è¿™æ˜¯ä¸€ä¸ªæ³¨é‡Š
         map[i] = '' + (char)x.t$byte;
     }
 }

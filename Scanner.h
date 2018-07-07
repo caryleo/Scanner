@@ -50,6 +50,8 @@ private:
     char c_CurChar;//当前读出字符
 
     vector<Token> v_Tokens;
+    vector<Token> v_Err_Tokens;
+    vector<string> v_Err_String;
     /**
      * 用于从缓冲区读取一个字符
      */
@@ -141,6 +143,10 @@ private:
      * @param stPos  开始位置
      */
     void _ScanComment(string tmpStr, Position stPos);
+    /**
+     * 输出词法错误
+     */
+    void _ErrOutput();
 };
 
 

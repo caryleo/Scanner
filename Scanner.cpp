@@ -27,6 +27,7 @@ void Scanner::Execute() {
             }
         }
         _FileOutput();
+        _ErrOutput();
         of_OutFile.close();
         of_ErrFile.close();
         cout << "分析完成" << endl;
@@ -363,12 +364,17 @@ void Scanner::_FileOutput() {
     for (int i = 0; i < len; ++i) {
         Token tmp = v_Tokens.at(i);
         //起点行列号
-        cout << "<" << tmp.getPos_StartPos().getI_Line() << "," << tmp.getPos_StartPos().getI_Col() << ">"
-             << "\t";
+        cout << tmp.getPos_StartPos().getI_Line() << '\t' << tmp.getPos_StartPos().getI_Col()
+             << '\t';
+        of_OutFile << tmp.getPos_StartPos().getI_Line() << '\t' << tmp.getPos_StartPos().getI_Col()
+                   << '\t';
         cout << "<" << tmp.getPos_EndPos().getI_Line() << "," << tmp.getPos_EndPos().getI_Col()<< ">"
              << "\t";
+        of_OutFile << tmp.getPos_EndPos().getI_Line() << '\t' << tmp.getPos_EndPos().getI_Col()
+                   << '\t';
         //type
         e_Attributes type = tmp.getEa_Type();
+        of_OutFile << type << '\t';
         switch (type) {
             case A_LEX_ERROR:
                 cout << hex << A_LEX_ERROR << "\t";
@@ -480,7 +486,490 @@ void Scanner::_FileOutput() {
                 break;
             default:break;
         }
+        //kind
+        e_KeywordKind kind = tmp.getEk_kind();
+        of_OutFile << kind << '\t';
+        switch (kind) {
+            case K_KEYWORD_ABSTRACT:
+                cout << K_KEYWORD_ABSTRACT << "\t";
+                cout << "{keyword abstract}" << "\t";
+                break;
+            case K_KEYWORD_BOOLEAN:
+                cout << K_KEYWORD_BOOLEAN << "\t";
+                cout << "{keyword boolean}" << "\t";
+                break;
+            case K_KEYWORD_BREAK:
+                cout << K_KEYWORD_BREAK << "\t";
+                cout << "{keyword break}" << "\t";
+                break;
+            case K_KEYWORD_BYTE:
+                cout << K_KEYWORD_BYTE << "\t";
+                cout << "{keyword byte}" << "\t";
+                break;
+            case K_KEYWORD_CASE:
+                cout << K_KEYWORD_CASE << "\t";
+                cout << "{keyword case}" << "\t";
+                break;
+            case K_KEYWORD_CATCH:
+                cout << K_KEYWORD_CATCH << "\t";
+                cout << "{keyword catch}" << "\t";
+                break;
+            case K_KEYWORD_CHAR:
+                cout << K_KEYWORD_CHAR << "\t";
+                cout << "{keyword char}" << "\t";
+                break;
+            case K_KEYWORD_CLASS:
+                cout << K_KEYWORD_CLASS << "\t";
+                cout << "{keyword class}" << "\t";
+                break;
+            case K_KEYWORD_CONST:
+                cout << K_KEYWORD_CONST << "\t";
+                cout << "{keyword const}" << "\t";
+                break;
+            case K_KEYWORD_CONTINUE:
+                cout << K_KEYWORD_CONTINUE << "\t";
+                cout << "{keyword continue}" << "\t";
+                break;
+            case K_KEYWORD_DEFAULT:
+                cout << K_KEYWORD_DEFAULT << "\t";
+                cout << "{keyword default}" << "\t";
+                break;
+            case K_KEYWORD_DO:
+                cout << K_KEYWORD_DO << "\t";
+                cout << "{keyword do}" << "\t";
+                break;
+            case K_KEYWORD_DOUBLE:
+                cout << K_KEYWORD_DOUBLE << "\t";
+                cout << "{keyword double}" << "\t";
+                break;
+            case K_KEYWORD_ELSE:
+                cout << K_KEYWORD_ELSE << "\t";
+                cout << "{keyword else}" << "\t";
+                break;
+            case K_KEYWORD_EXTENDS:
+                cout << K_KEYWORD_EXTENDS << "\t";
+                cout << "{keyword extends}" << "\t";
+                break;
+            case K_KEYWORD_FALSE:
+                cout << K_KEYWORD_FALSE << "\t";
+                cout << "{keyword false}" << "\t";
+                break;
+            case K_KEYWORD_FINAL:
+                cout << K_KEYWORD_FINAL << "\t";
+                cout << "{keyword final}" << "\t";
+                break;
+            case K_KEYWORD_FINALLY:
+                cout << K_KEYWORD_FINALLY << "\t";
+                cout << "{keyword finally}" << "\t";
+                break;
+            case K_KEYWORD_FLOAT:
+                cout << K_KEYWORD_FLOAT << "\t";
+                cout << "{keyword float}" << "\t";
+                break;
+            case K_KEYWORD_FOR:
+                cout << K_KEYWORD_FOR << "\t";
+                cout << "{keyword for}" << "\t";
+                break;
+            case K_KEYWORD_GOTO:
+                cout << K_KEYWORD_GOTO << "\t";
+                cout << "{keyword goto}" << "\t";
+                break;
+            case K_KEYWORD_IF:
+                cout << K_KEYWORD_IF << "\t";
+                cout << "{keyword if}" << "\t";
+                break;
+            case K_KEYWORD_IMPLEMENTS:
+                cout << K_KEYWORD_IMPLEMENTS << "\t";
+                cout << "{keyword implements}" << "\t";
+                break;
+            case K_KEYWORD_IMPORT:
+                cout << K_KEYWORD_IMPORT << "\t";
+                cout << "{keyword import}" << "\t";
+                break;
+            case K_KEYWORD_INSTANCEOF:
+                cout << K_KEYWORD_INSTANCEOF << "\t";
+                cout << "{keyword instanceof}" << "\t";
+                break;
+            case K_KEYWORD_INT:
+                cout << K_KEYWORD_INT << "\t";
+                cout << "{keyword int}" << "\t";
+                break;
+            case K_KEYWORD_INTERFACE:
+                cout << K_KEYWORD_INTERFACE << "\t";
+                cout << "{keyword interface}" << "\t";
+                break;
+            case K_KEYWORD_LONG:
+                cout << K_KEYWORD_LONG << "\t";
+                cout << "{keyword long}" << "\t";
+                break;
+            case K_KEYWORD_NATIVE:
+                cout << K_KEYWORD_NATIVE << "\t";
+                cout << "{keyword native}" << "\t";
+                break;
+            case K_KEYWORD_NEW:
+                cout << K_KEYWORD_NEW << "\t";
+                cout << "{keyword new}" << "\t";
+                break;
+            case K_KEYWORD_NULL:
+                cout << K_KEYWORD_NULL << "\t";
+                cout << "{keyword null}" << "\t";
+                break;
+            case K_KEYWORD_PACKAGE:
+                cout << K_KEYWORD_PACKAGE << "\t";
+                cout << "{keyword package}" << "\t";
+                break;
+            case K_KEYWORD_PRIVATE:
+                cout << K_KEYWORD_PRIVATE << "\t";
+                cout << "{keyword private}" << "\t";
+                break;
+            case K_KEYWORD_PROTECTED:
+                cout << K_KEYWORD_PROTECTED << "\t";
+                cout << "{keyword protected}" << "\t";
+                break;
+            case K_KEYWORD_PUBLIC:
+                cout << K_KEYWORD_PUBLIC << "\t";
+                cout << "{keyword public}" << "\t";
+                break;
+            case K_KEYWORD_RETURN:
+                cout << K_KEYWORD_RETURN << "\t";
+                cout << "{keyword return}" << "\t";
+                break;
+            case K_KEYWORD_SHORT:
+                cout << K_KEYWORD_SHORT << "\t";
+                cout << "{keyword shot}" << "\t";
+                break;
+            case K_KEYWORD_STATIC:
+                cout << K_KEYWORD_STATIC << "\t";
+                cout << "{keyword static}" << "\t";
+                break;
+            case K_KEYWORD_SUPER:
+                cout << K_KEYWORD_SUPER << "\t";
+                cout << "{keyword super}" << "\t";
+                break;
+            case K_KEYWORD_SWITCH:
+                cout << K_KEYWORD_SWITCH << "\t";
+                cout << "{keyword switch}" << "\t";
+                break;
+            case K_KEYWORD_SYNCHRONIZED:
+                cout << K_KEYWORD_SYNCHRONIZED << "\t";
+                cout << "{keyword synchronized}" << "\t";
+                break;
+            case K_KEYWORD_THIS:
+                cout << K_KEYWORD_THIS << "\t";
+                cout << "{keyword this}" << "\t";
+                break;
+            case K_KEYWORD_THROW:
+                cout << K_KEYWORD_THROW << "\t";
+                cout << "{keyword throw}" << "\t";
+                break;
+            case K_KEYWORD_THROWS:
+                cout << K_KEYWORD_THROWS << "\t";
+                cout << "{keyword throws}" << "\t";
+                break;
+            case K_KEYWORD_TRANSIENT:
+                cout << K_KEYWORD_TRANSIENT << "\t";
+                cout << "{keyword transient}" << "\t";
+                break;
+            case K_KEYWORD_TRUE:
+                cout << K_KEYWORD_TRUE << "\t";
+                cout << "{keyword true}" << "\t";
+                break;
+            case K_KEYWORD_TRY:
+                cout << K_KEYWORD_TRY << "\t";
+                cout << "{keyword try}" << "\t";
+                break;
+            case K_KEYWORD_VOID:
+                cout << K_KEYWORD_VOID << "\t";
+                cout << "{keyword void}" << "\t";
+                break;
+            case K_KEYWORD_VOLATILE:
+                cout << K_KEYWORD_VOLATILE << "\t";
+                cout << "{keyword volatile}" << "\t";
+                break;
+            case K_KEYWORD_WHILE:
+                cout << K_KEYWORD_WHILE << "\t";
+                cout << "{keyword while}" << "\t";
+                break;
+            case K_IDENTITY:
+                cout << K_IDENTITY << "\t";
+                cout << "{identity}" << "\t";
+                break;
+            case K_SPACE:
+                cout << K_SPACE<< "\t";
+                cout << "{space}" << "\t";
+                break;
+            case K_CONSTANT_INTEGER:
+                cout << K_CONSTANT_INTEGER << "\t";
+                cout << "{constant integer}" << "\t";
+                break;
+            case K_CONSTANT_REAL:
+                cout << K_CONSTANT_REAL << "\t";
+                cout << "{constant real}" << "\t";
+                break;
+            case K_CONSTANT_POSITIVE_INTEGER:
+                cout << K_CONSTANT_POSITIVE_INTEGER << "\t";
+                cout << "{constant positive integer}" << "\t";
+                break;
+            case K_CONSTANT_NEGATIVE_INTEGER:
+                cout << K_CONSTANT_NEGATIVE_INTEGER << "\t";
+                cout << "{constant negative integer}" << "\t";
+                break;
+            case K_CONSTANT_POSITIVE_REAL:
+                cout << K_CONSTANT_POSITIVE_REAL << "\t";
+                cout << "{constant positive real}" << "\t";
+                break;
+            case K_CONSTANT_NEGATIVE_REAL:
+                cout << K_CONSTANT_NEGATIVE_REAL << "\t";
+                cout << "{constant negative real}" << "\t";
+                break;
+            case K_CONSTANT_BOOL:
+                cout << K_CONSTANT_BOOL << "\t";
+                cout << "{constant bool}" << "\t";
+                break;
+            case K_CONSTANT_STRING:
+                cout << K_CONSTANT_STRING << "\t";
+                cout << "{constant string}" << "\t";
+                break;
+            case K_CONSTANT_CHAR:
+                cout << K_CONSTANT_CHAR << "\t";
+                cout << "{costant char}" << "\t";
+                break;
+            case K_CONSTANT_OCT_INTEGER:
+                cout << K_CONSTANT_OCT_INTEGER << "\t";
+                cout << "{constant oct integer}" << "\t";
+                break;
+            case K_CONSTANT_HEX_INTEGER:
+                cout << K_CONSTANT_HEX_INTEGER << "\t";
+                cout << "{constant hex integer}" << "\t";
+                break;
+            case K_ESCAPE_OCT_CHAR:
+                cout << K_ESCAPE_OCT_CHAR << "\t";
+                cout << "{escape oct char}" << "\t";
+                break;
+            case K_ESCAPE_HEX_CHAR:
+                cout << K_ESCAPE_HEX_CHAR << "\t";
+                cout << "{escape hex char}" << "\t";
+                break;
+            case K_ESCAPE_SINGLE_QUO:
+                cout << K_ESCAPE_SINGLE_QUO << "\t";
+                cout << "{escape single quo}" << "\t";
+                break;
+            case K_ESCAPE_BACK_SLASH:
+                cout << K_ESCAPE_BACK_SLASH << "\t";
+                cout << "{escape back slash}" << "\t";
+                break;
+            case K_ESCAPE_CR:
+                cout << K_ESCAPE_CR << "\t";
+                cout << "{escape cr}" << "\t";
+                break;
+            case K_ESCAPE_LF:
+                cout << K_ESCAPE_LF << "\t";
+                cout << "{escape lf}" << "\t";
+                break;
+            case K_ESCAPE_FF:
+                cout << K_ESCAPE_FF << "\t";
+                cout << "{escape ff}" << "\t";
+                break;
+            case K_ESCAPE_TAB:
+                cout << K_ESCAPE_TAB << "\t";
+                cout << "{escape tab}" << "\t";
+                break;
+            case K_ESCAPE_BACKSPACE:
+                cout << K_ESCAPE_BACKSPACE << "\t";
+                cout << "{escape backspace}" << "\t";
+                break;
+            case K_BOUNDARY_BRACES_LEFT:
+                cout << K_BOUNDARY_BRACES_RIGHT << "\t";
+                cout << "{boundary braces right}" << "\t";
+                break;
+            case K_BOUNDARY_BRACKET_LEFT:
+                cout << K_BOUNDARY_BRACKET_LEFT << "\t";
+                cout << "{boundary bracket left}" << "\t";
+                break;
+            case K_BOUNDARY_BRACKET_RIGHT:
+                cout << K_BOUNDARY_BRACKET_RIGHT << "\t";
+                cout << "{boundary bracket right}" << "\t";
+                break;
+            case K_BOUNDARY_PARENTHESES_LEFT:
+                cout << K_BOUNDARY_PARENTHESES_LEFT << "\t";
+                cout << "{boundary parentheses left}" << "\t";
+                break;
+            case K_BOUNDARY_PARENTHESES_RIGHT:
+                cout << K_BOUNDARY_PARENTHESES_RIGHT << "\t";
+                cout << "{boundary parenthese right}" << "\t";
+                break;
+            case K_BOUNDARY_COMMA:
+                cout << K_BOUNDARY_COMMA << "\t";
+                cout << "{boundary comma}" << "\t";
+                break;
+            case K_BOUNDARY_PERIOD:
+                cout << K_BOUNDARY_PERIOD << "\t";
+                cout << "{boundary period}" << "\t";
+                break;
+            case K_BOUNDARY_SEMICOLON:
+                cout << K_BOUNDARY_SEMICOLON << "\t";
+                cout << "{boundary semicolon}" << "\t";
+                break;
+            case K_BOUNDARY:
+                cout << K_BOUNDARY << "\t";
+                cout << "{boundary}" << "\t";
+                break;
+            case K_OPR_ASSIGN:
+                cout << K_OPR_ASSIGN << "\t";
+                cout << "{opr assign}" << "\t";
+                break;
+            case K_OPR_ADD:
+                cout << K_OPR_ADD << "\t";
+                cout << "{opr add}" << "\t";
+                break;
+            case K_OPR_SUB:
+                cout << K_OPR_SUB << "\t";
+                cout << "{opr sub}" << "\t";
+                break;
+            case K_OPR_MUL:
+                cout << K_OPR_MUL << "\t";
+                cout << "{opr mul}" << "\t";
+                break;
+            case K_OPR_DIV:
+                cout << K_OPR_DIV << "\t";
+                cout << "{opr div}" << "\t";
+                break;
+            case K_OPR_MOD:
+                cout << K_OPR_MOD << "\t";
+                cout << "{opr mod}" << "\t";
+                break;
+            case K_OPR_GT:
+                cout << K_OPR_GT << "\t";
+                cout << "{opr gt}" << "\t";
+                break;
+            case K_OPR_GE:
+                cout << K_OPR_GE << "\t";
+                cout << "{opr ge}" << "\t";
+                break;
+            case K_OPR_EQU:
+                cout << K_OPR_EQU << "\t";
+                cout << "{opr equ}" << "\t";
+                break;
+            case K_OPR_NEQU:
+                cout << K_OPR_NEQU << "\t";
+                cout << "{opr nequ}" << "\t";
+                break;
+            case K_OPR_LT:
+                cout << K_OPR_LT << "\t";
+                cout << "{opr lt}" << "\t";
+                break;
+            case K_OPR_LE:
+                cout << K_OPR_LE << "\t";
+                cout << "{opr le}" << "\t";
+                break;
+            case K_OPR_AND:
+                cout << K_OPR_AND << "\t";
+                cout << "{opr and}" << "\t";
+                break;
+            case K_OPR_OR:
+                cout << K_OPR_OR << "\t";
+                cout << "{opr or}" << "\t";
+                break;
+            case K_OPR_NOT:
+                cout << K_OPR_NOT << "\t";
+                cout << "{opr not}" << "\t";
+                break;
+            case K_OPR_AND_BIT:
+                cout << K_OPR_AND_BIT << "\t";
+                cout << "{opr and bit}" << "\t";
+                break;
+            case K_OPR_OR_BIT:
+                cout << K_OPR_OR_BIT << "\t";
+                cout << "{opr or bit}" << "\t";
+                break;
+            case K_OPR_XOR_BIT:
+                cout << K_OPR_XOR_BIT << "\t";
+                cout << "{opr xor bit}" << "\t";
+                break;
+            case K_OPR_NOT_BIT:
+                cout << K_OPR_NOT_BIT << "\t";
+                cout << "{opr not bit}" << "\t";
+                break;
+            case K_OPR_ADD_ASSIGN:
+                cout << K_OPR_ADD_ASSIGN << "\t";
+                cout << "{opr add assign}" << "\t";
+                break;
+            case K_OPR_SUB_ASSIGN:
+                cout << K_OPR_SUB_ASSIGN << "\t";
+                cout << "{opr sub assign}" << "\t";
+                break;
+            case K_OPR_MUL_ASSIGN:
+                cout << K_OPR_MUL_ASSIGN << "\t";
+                cout << "{opr mul assign}" << "\t";
+                break;
+            case K_OPR_DIV_ASSIGN:
+                cout << K_OPR_DIV_ASSIGN << "\t";
+                cout << "{opr div assign}" << "\t";
+                break;
+            case K_OPR_MOD_ASSIGN:
+                cout << K_OPR_MOD_ASSIGN << "\t";
+                cout << "{opr mod assign}" << "\t";
+                break;
+            case K_OPR_INC:
+                cout << K_OPR_INC << "\t";
+                cout << "{opr inc}" << "\t";
+                break;
+            case K_OPR_DEC:
+                cout << K_OPR_DEC << "\t";
+                cout << "{opr dec}" << "\t";
+                break;
+            case K_OPR_AND_ASSIGN:
+                cout << K_OPR_AND_ASSIGN << "\t";
+                cout << "{opr and assign}" << "\t";
+                break;
+            case K_OPR_OR_ASSIGN:
+                cout << K_OPR_OR_ASSIGN << "\t";
+                cout << "{opr or assign}" << "\t";
+                break;
+            case K_OPR_NOT_ASSIGN:
+                cout << K_OPR_NOT_ASSIGN << "\t";
+                cout << "{opr not assign}" << "\t";
+                break;
+            case K_OPR_SHIFT_LEFT:
+                cout << K_OPR_SHIFT_LEFT << "\t";
+                cout << "{opr shift left}" << "\t";
+                break;
+            case K_OPR_SHIFT_RIGHT:
+                cout << K_OPR_SHIFT_RIGHT << "\t";
+                cout << "{opr shift right}" << "\t";
+                break;
+            case K_OPR_SHIFT_ZERO:
+                cout << K_OPR_SHIFT_ZERO << "\t";
+                cout << "{opr shift zero}" << "\t";
+                break;
+            case K_OPR_SHIFT_LEFT_ASSIGN:
+                cout << K_OPR_SHIFT_LEFT_ASSIGN << "\t";
+                cout << "{opr shift left assign}" << "\t";
+                break;
+            case K_OPR_SHIFT_RIGHT_ASSIGN:
+                cout << K_OPR_SHIFT_RIGHT_ASSIGN << "\t";
+                cout << "{ior shift right assign}" << "\t";
+                break;
+            case K_OPR_SHIFT_ZERO_ASSIGN:
+                cout << K_OPR_SHIFT_ZERO_ASSIGN << "\t";
+                cout << "{opr shift zero assign}" << "\t";
+                break;
+            case K_OPR_TERNARY_QUESTION:
+                cout << K_OPR_TERNARY_QUESTION << "\t";
+                cout << "{opr ternary question}" << "\t";
+                break;
+            case K_OPR_TERNARY_COLON:
+                cout << K_OPR_TERNARY_COLON << "\t";
+                cout << "{opt ternary colon}" << "\t";
+                break;
+            case K_OPR:
+                cout << K_OPR << "\t";
+                cout << "{opr}" << "\t";
+                break;
+            default:break;
+        }
         cout << tmp.getStr_RealString() << endl;
+        of_OutFile << tmp.getStr_RealString() << endl;
     }
 }
 
@@ -1155,62 +1644,65 @@ bool Scanner::_ScanNumber() {
 }
 
 void Scanner::_LexError(int errorCode, Token tok) {
+    v_Err_Tokens.push_back(tok);
+    string err;
     switch (errorCode) {
         case 100:
-            cerr << "实型常量格式错误" << endl;
+            err = "实型常量格式错误";
             break;
         case 101:
-            cerr << "十六进制数格式错误" << endl;
+            err = "十六进制数格式错误";
             break;
         case 102:
-            cerr << "八进制数格式错误" << endl;
+            err = "八进制数格式错误";
             break;
         case 103 :
-            cerr << "程序结尾非法" << endl;
+            err = "程序结尾非法";
             break;
         case 104:
-            cerr << "程序行尾非法" << endl;
+            err = "程序行尾非法";
             break;
         case 105:
-            cerr << "字符长度非法" << endl;
+            err = "字符长度非法";
             break;
         case 106:
-            cerr << "八进制字符格式错误" << endl;
+            err = "八进制字符格式错误";
             break;
         case 107:
-            cerr << "十六进制字符格式错误" << endl;
+            err = "十六进制字符格式错误";
             break;
         case 108:
-            cerr << "字符单引号格式错误" << endl;
+            err = "字符单引号格式错误";
             break;
         case 109:
-            cerr << "字符反斜杠格式错误" << endl;
+            err = "字符反斜杠格式错误";
             break;
         case 110:
-            cerr << "字符回车格式错误" << endl;
+            err = "字符回车格式错误";
             break;
         case 111:
-            cerr << "字符换行格式错误" << endl;
+            err = "字符换行格式错误";
             break;
         case 112:
-            cerr << "字符走纸换页格式错误" << endl;
+            err = "字符走纸换页格式错误";
             break;
         case 113:
-            cerr << "字符TAB格式错误" << endl;
+            err = "字符TAB格式错误";
             break;
         case 114:
-            cerr << "字符退格格式错误" << endl;
+            err = "字符退格格式错误";
             break;
         case 115:
-            cerr << "转义字符格式错误" << endl;
+            err = "转义字符格式错误";
             break;
         case 116:
-            cerr << "空字符" << endl;
+            err = "空字符";
             break;
         default:
-            cerr << "未知错误" << endl;
+            err = "未知错误";
             break;
     }
+    v_Err_String.push_back(err);
 }
 
 void Scanner::_ScanCharacter() {
@@ -2777,5 +3269,18 @@ void Scanner::_ScanComment(string tmpStr, Position stPos) {
             v_Tokens.push_back(tok);
             return;
         }
+    }
+}
+
+void Scanner::_ErrOutput() {
+    int len = v_Err_Tokens.size();
+    for (int i = 0; i < len; ++i) {
+        Token tmp = v_Err_Tokens[i];
+        string err = v_Err_String[i];
+        Position pos = tmp.getPos_StartPos();
+        of_ErrFile << "Error: " << err << endl;
+        cerr << "Error: " << err << endl;
+        of_ErrFile << "\tAt Line " << pos.getI_Line() << ", Column " << pos.getI_Col() << endl;
+        cerr << "\tAt Line " << pos.getI_Line() << ", Column " << pos.getI_Col() << endl;
     }
 }

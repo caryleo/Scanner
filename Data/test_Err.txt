@@ -1,0 +1,8 @@
+Error: 程序行尾非法
+	At Line 8, Column 34
+Error: 十六进制数格式错误
+	At Line 11, Column 36
+Error: 空字符
+	At Line 13, Column 18
+Error: 程序行尾非法
+	At Line 13, Column 19
