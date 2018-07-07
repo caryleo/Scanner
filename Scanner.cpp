@@ -1377,7 +1377,7 @@ bool Scanner::_ScanNumber() {
                     return false;
                 }
             }
-            if (ch == 'F' || ch == 'f' | ch == 'D' || ch == 'd') {
+            if (ch == 'F' || ch == 'f' || ch == 'D' || ch == 'd') {
                 //这个时候认为是十进制实型
                 tmpStr += ch;
                 i_Col++;
