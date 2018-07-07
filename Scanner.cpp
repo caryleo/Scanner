@@ -3274,6 +3274,12 @@ void Scanner::_ScanComment(string tmpStr, Position stPos) {
 
 void Scanner::_ErrOutput() {
     int len = v_Err_Tokens.size();
+    if (len == 0)
+    {
+        cout << "---NO-ERROR---" << endl;
+        of_ErrFile << "---NO-ERROR---" << endl;
+        return;
+    }
     for (int i = 0; i < len; ++i) {
         Token tmp = v_Err_Tokens[i];
         string err = v_Err_String[i];
