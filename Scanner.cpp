@@ -2645,6 +2645,7 @@ bool Scanner::_ScanOPR() {
                 tok.Set(A_LEX_MUL_DIV_MOD, K_OPR_MUL, tmpStr, stPos, edPos);
                 v_Tokens.push_back(tok);
             }
+            break;
         case '/':
             //对除号，有/ /= 和注释
             ch = _ReadChar();
